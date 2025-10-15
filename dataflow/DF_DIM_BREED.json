@@ -9,7 +9,7 @@
 						"referenceName": "Snow_Stage_DS",
 						"type": "DatasetReference"
 					},
-					"name": "sourcePrimary"
+					"name": "sourceSPL"
 				},
 				{
 					"dataset": {
@@ -63,7 +63,7 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     format: 'table') ~> sourcePrimary",
+				"     format: 'table') ~> sourceSPL",
 				"source(output(",
 				"          SPECIES_KEY as decimal(38,0),",
 				"          SPECIES_NAME as string",
@@ -71,7 +71,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourceSpecies",
-				"sourcePrimary derive(species_clean = upper(trim(SPECIES)),",
+				"sourceSPL derive(species_clean = upper(trim(SPECIES)),",
 				"          primary_breed_clean = iif(isNull(PRIMARY_BREED)   || trim(PRIMARY_BREED)==''  , toString(null()), upper(trim(PRIMARY_BREED))),",
 				"          secondary_breed_clean = iif(isNull(SECONDARY_BREED) || trim(SECONDARY_BREED)=='' , toString(null()), upper(trim(SECONDARY_BREED)))) ~> CleanPet",
 				"CleanFilter, sourceSpecies lookup(species_clean == upper(trim(SPECIES_NAME)),",
