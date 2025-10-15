@@ -1,0 +1,9 @@
+{
+	"name": "AkshaySeattlePetlicense",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "3dc4c1c6-844e-4df0-ba42-dc931bcfe2fe",
+		"tenantId": "a8eec281-aaa3-4dae-ac9b-9a398b9215e7"
+	}
+}
