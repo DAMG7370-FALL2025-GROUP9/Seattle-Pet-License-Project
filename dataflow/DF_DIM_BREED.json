@@ -1,0 +1,80 @@
+{
+	"name": "DF_DIM_BREED",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Snow_Stage_DS",
+						"type": "DatasetReference"
+					},
+					"name": "sourcePrimary"
+				},
+				{
+					"dataset": {
+						"referenceName": "Snow_Stage_DS",
+						"type": "DatasetReference"
+					},
+					"name": "sourceSpecies"
+				}
+			],
+			"sinks": [
+				{
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CleanP"
+				},
+				{
+					"name": "LkpSpecies"
+				},
+				{
+					"name": "DistinctBreedBySpecies"
+				},
+				{
+					"name": "RowChanges"
+				},
+				{
+					"name": "CleanFilter"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          LICENSE_ISSUE_DATE as string,",
+				"          LICENSE_NUMBER as string,",
+				"          ANIMAL_NAME as string,",
+				"          SPECIES as string,",
+				"          PRIMARY_BREED as string,",
+				"          SECONDARY_BREED as string,",
+				"          ZIP_CODE as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> sourcePrimary",
+				"source(output(",
+				"          SPECIES_KEY as decimal(38,0),",
+				"          SPECIES_NAME as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> sourceSpecies",
+				"sourcePrimary derive(species_clean = upper(trim(SPECIES)),",
+				"          breed_clean = upper(trim(PRIMARY_BREED))) ~> CleanP",
+				"CleanFilter, sourceSpecies lookup(species_clean == SPECIES_NAME,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LkpSpecies",
+				"LkpSpecies aggregate(groupBy(SPECIES_KEY = Species)) ~> DistinctBreedBySpecies",
+				"DistinctBreedBySpecies alterRow() ~> RowChanges",
+				"CleanP filter(!isNull(breed_clean) && trim(breed_clean) != '') ~> CleanFilter",
+				"RowChanges sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}
