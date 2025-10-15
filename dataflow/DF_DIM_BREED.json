@@ -16,13 +16,6 @@
 						"referenceName": "Snow_Stage_DS",
 						"type": "DatasetReference"
 					},
-					"name": "sourceSecondary"
-				},
-				{
-					"dataset": {
-						"referenceName": "Snow_Stage_DS",
-						"type": "DatasetReference"
-					},
 					"name": "sourceSpecies"
 				}
 			],
@@ -37,7 +30,7 @@
 			],
 			"transformations": [
 				{
-					"name": "CleanP"
+					"name": "CleanPet"
 				},
 				{
 					"name": "LkpSpecies"
@@ -47,21 +40,6 @@
 				},
 				{
 					"name": "ShapePrimary"
-				},
-				{
-					"name": "CleanS"
-				},
-				{
-					"name": "CleanFilter2"
-				},
-				{
-					"name": "LkpSpecies2"
-				},
-				{
-					"name": "ShapeSecondary"
-				},
-				{
-					"name": "UnionAll"
 				},
 				{
 					"name": "DistinctRows"
@@ -87,18 +65,6 @@
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourcePrimary",
 				"source(output(",
-				"          LICENSE_ISSUE_DATE as string,",
-				"          LICENSE_NUMBER as string,",
-				"          ANIMAL_NAME as string,",
-				"          SPECIES as string,",
-				"          PRIMARY_BREED as string,",
-				"          SECONDARY_BREED as string,",
-				"          ZIP_CODE as string",
-				"     ),",
-				"     allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     format: 'table') ~> sourceSecondary",
-				"source(output(",
 				"          SPECIES_KEY as decimal(38,0),",
 				"          SPECIES_NAME as string",
 				"     ),",
@@ -106,25 +72,16 @@
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourceSpecies",
 				"sourcePrimary derive(species_clean = upper(trim(SPECIES)),",
-				"          primary_breed_clean = upper(trim(PRIMARY_BREED))) ~> CleanP",
-				"CleanFilter, sourceSpecies lookup(species_clean == SPECIES_NAME,",
+				"          primary_breed_clean = iif(isNull(PRIMARY_BREED)   || trim(PRIMARY_BREED)==''  , toString(null()), upper(trim(PRIMARY_BREED))),",
+				"          secondary_breed_clean = iif(isNull(SECONDARY_BREED) || trim(SECONDARY_BREED)=='' , toString(null()), upper(trim(SECONDARY_BREED)))) ~> CleanPet",
+				"CleanFilter lookup(species_clean == upper(trim(SPECIES_NAME)),",
 				"     multiple: false,",
 				"     pickup: 'any',",
 				"     broadcast: 'auto')~> LkpSpecies",
-				"CleanP filter(!isNull(primary_breed_clean) && trim(primary_breed_clean) != '') ~> CleanFilter",
+				"CleanPet filter(!isNull(primary_breed_clean) || !isNull(secondary_breed_clean)) ~> CleanFilter",
 				"LkpSpecies derive(primary_breed_clean = toString(substring(primary_breed_clean,0,100)),",
 				"          SECONDARY_BREED = toString(null())) ~> ShapePrimary",
-				"sourceSecondary derive(species_clean = upper(trim(SPECIES)),",
-				"          breed_secondary_clean = upper(trim(SECONDARY_BREED))) ~> CleanS",
-				"CleanS filter(!isNull(breed_secondary_clean) && trim(breed_secondary_clean) != '') ~> CleanFilter2",
-				"CleanFilter2, sourceSpecies lookup(species_clean == SPECIES_NAME,",
-				"     multiple: false,",
-				"     pickup: 'any',",
-				"     broadcast: 'auto')~> LkpSpecies2",
-				"LkpSpecies2 derive(PRIMARY_BREED = toString(null()),",
-				"          SECONDARY_BREED = toString(substring(breed_secondary_clean,0,100))) ~> ShapeSecondary",
-				"ShapePrimary, ShapeSecondary union(byName: true)~> UnionAll",
-				"UnionAll aggregate(groupBy(SPECIES_KEY,",
+				"ShapePrimary aggregate(groupBy(SPECIES_KEY,",
 				"          PRIMARY_BREED,",
 				"          SECONDARY_BREED),",
 				"     row_count = count(1)) ~> DistinctRows",
