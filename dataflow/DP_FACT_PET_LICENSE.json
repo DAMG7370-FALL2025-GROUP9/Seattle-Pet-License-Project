@@ -26,7 +26,18 @@
 					"name": "sourceDate"
 				},
 				{
+					"dataset": {
+						"referenceName": "Snow_Stage_DS",
+						"type": "DatasetReference"
+					},
 					"name": "sourceBreed"
+				},
+				{
+					"dataset": {
+						"referenceName": "Snow_Stage_DS",
+						"type": "DatasetReference"
+					},
+					"name": "sourceSpecies"
 				}
 			],
 			"sinks": [],
@@ -48,6 +59,9 @@
 				}
 			],
 			"scriptLines": [
+				"parameters{",
+				"     parameter1 as string",
+				"}",
 				"source(output(",
 				"          LICENSE_ISSUE_DATE as string,",
 				"          LICENSE_NUMBER as string,",
@@ -86,8 +100,18 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourceDate",
+				"source(output(",
+				"          BREED_KEY as decimal(38,0),",
+				"          SPECIES_KEY as decimal(38,0),",
+				"          PRIMARY_BREED_NAME as string,",
+				"          SECONDARY_BREED_NAME as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> sourceBreed",
 				"source(allowSchemaDrift: true,",
-				"     validateSchema: false) ~> sourceBreed",
+				"     validateSchema: false,",
+				"     format: 'table') ~> sourceSpecies",
 				"sourceSPL derive(full_date = toDate(toTimestamp(trim(LICENSE_ISSUE_DATE), 'MMMM d, yyyy')),",
 				"          species_clean = upper(trim(SPECIES)),",
 				"          breed_clean = iif(!isNull(PRIMARY_BREED) && trim(PRIMARY_BREED)!='', upper(trim(PRIMARY_BREED)), upper(trim(SECONDARY_BREED))),",
