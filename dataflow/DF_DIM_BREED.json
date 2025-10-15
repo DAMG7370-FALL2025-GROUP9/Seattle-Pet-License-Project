@@ -39,10 +39,10 @@
 					"name": "CleanFilter"
 				},
 				{
-					"name": "ShapePrimary"
+					"name": "ShapeForDim"
 				},
 				{
-					"name": "DistinctRows"
+					"name": "DistinctPairs"
 				},
 				{
 					"name": "RowChanges"
@@ -74,19 +74,19 @@
 				"sourcePrimary derive(species_clean = upper(trim(SPECIES)),",
 				"          primary_breed_clean = iif(isNull(PRIMARY_BREED)   || trim(PRIMARY_BREED)==''  , toString(null()), upper(trim(PRIMARY_BREED))),",
 				"          secondary_breed_clean = iif(isNull(SECONDARY_BREED) || trim(SECONDARY_BREED)=='' , toString(null()), upper(trim(SECONDARY_BREED)))) ~> CleanPet",
-				"CleanFilter lookup(species_clean == upper(trim(SPECIES_NAME)),",
+				"CleanFilter, sourceSpecies lookup(species_clean == upper(trim(SPECIES_NAME)),",
 				"     multiple: false,",
 				"     pickup: 'any',",
 				"     broadcast: 'auto')~> LkpSpecies",
 				"CleanPet filter(!isNull(primary_breed_clean) || !isNull(secondary_breed_clean)) ~> CleanFilter",
-				"LkpSpecies derive(primary_breed_clean = toString(substring(primary_breed_clean,0,100)),",
-				"          SECONDARY_BREED = toString(null())) ~> ShapePrimary",
-				"ShapePrimary aggregate(groupBy(SPECIES_KEY,",
+				"LkpSpecies derive(PRIMARY_BREED = toString(substring(primary_breed_clean,0,100)),",
+				"          SECONDARY_BREED = toString(substring(secondary_breed_clean,0,100))) ~> ShapeForDim",
+				"ShapeForDim aggregate(groupBy(SPECIES_KEY,",
 				"          PRIMARY_BREED,",
 				"          SECONDARY_BREED),",
-				"     row_count = count(1)) ~> DistinctRows",
+				"     row_count = count(1)) ~> DistinctPairs",
 				"surrogateKey alterRow(upsertIf(true())) ~> RowChanges",
-				"DistinctRows keyGenerate(output(GENERATED_KEY as long),",
+				"DistinctPairs keyGenerate(output(GENERATED_KEY as long),",
 				"     startAt: 1L,",
 				"     stepValue: 1L) ~> surrogateKey",
 				"RowChanges sink(allowSchemaDrift: true,",
