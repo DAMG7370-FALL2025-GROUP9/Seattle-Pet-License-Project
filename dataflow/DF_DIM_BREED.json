@@ -12,6 +12,10 @@
 					"name": "sourcePrimary"
 				},
 				{
+					"dataset": {
+						"referenceName": "Snow_Stage_DS",
+						"type": "DatasetReference"
+					},
 					"name": "sourceSecondary"
 				},
 				{
@@ -22,7 +26,15 @@
 					"name": "sourceSpecies"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Snow_Stage_DS",
+						"type": "DatasetReference"
+					},
+					"name": "sinkDimBreed"
+				}
+			],
 			"transformations": [
 				{
 					"name": "CleanP"
@@ -35,6 +47,30 @@
 				},
 				{
 					"name": "ShapePrimary"
+				},
+				{
+					"name": "CleanS"
+				},
+				{
+					"name": "CleanFilter2"
+				},
+				{
+					"name": "LkpSpecies2"
+				},
+				{
+					"name": "ShapeSecondary"
+				},
+				{
+					"name": "UnionAll"
+				},
+				{
+					"name": "DistinctRows"
+				},
+				{
+					"name": "RowChanges"
+				},
+				{
+					"name": "surrogateKey"
 				}
 			],
 			"scriptLines": [
@@ -50,8 +86,18 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourcePrimary",
-				"source(allowSchemaDrift: true,",
-				"     validateSchema: false) ~> sourceSecondary",
+				"source(output(",
+				"          LICENSE_ISSUE_DATE as string,",
+				"          LICENSE_NUMBER as string,",
+				"          ANIMAL_NAME as string,",
+				"          SPECIES as string,",
+				"          PRIMARY_BREED as string,",
+				"          SECONDARY_BREED as string,",
+				"          ZIP_CODE as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table') ~> sourceSecondary",
 				"source(output(",
 				"          SPECIES_KEY as decimal(38,0),",
 				"          SPECIES_NAME as string",
@@ -66,8 +112,43 @@
 				"     pickup: 'any',",
 				"     broadcast: 'auto')~> LkpSpecies",
 				"CleanP filter(!isNull(primary_breed_clean) && trim(primary_breed_clean) != '') ~> CleanFilter",
-				"LkpSpecies derive(PRIMARY_BREED = toString(substring(primary_breed_clean,0,100)),",
-				"          SECONDARY_BREED = toString(null())) ~> ShapePrimary"
+				"LkpSpecies derive(primary_breed_clean = toString(substring(primary_breed_clean,0,100)),",
+				"          SECONDARY_BREED = toString(null())) ~> ShapePrimary",
+				"sourceSecondary derive(species_clean = upper(trim(SPECIES)),",
+				"          breed_secondary_clean = upper(trim(SECONDARY_BREED))) ~> CleanS",
+				"CleanS filter(!isNull(breed_secondary_clean) && trim(breed_secondary_clean) != '') ~> CleanFilter2",
+				"CleanFilter2, sourceSpecies lookup(species_clean == SPECIES_NAME,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LkpSpecies2",
+				"LkpSpecies2 derive(PRIMARY_BREED = toString(null()),",
+				"          SECONDARY_BREED = toString(substring(breed_secondary_clean,0,100))) ~> ShapeSecondary",
+				"ShapePrimary, ShapeSecondary union(byName: true)~> UnionAll",
+				"UnionAll aggregate(groupBy(SPECIES_KEY,",
+				"          PRIMARY_BREED,",
+				"          SECONDARY_BREED),",
+				"     row_count = count(1)) ~> DistinctRows",
+				"surrogateKey alterRow(upsertIf(true())) ~> RowChanges",
+				"DistinctRows keyGenerate(output(GENERATED_KEY as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> surrogateKey",
+				"RowChanges sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['BREED_KEY','SPECIES_KEY','PRIMARY_BREED_NAME','SECONDARY_BREED_NAME'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     stageInsert: true,",
+				"     mapColumn(",
+				"          SPECIES_KEY,",
+				"          PRIMARY_BREED_NAME = PRIMARY_BREED,",
+				"          SECONDARY_BREED_NAME = SECONDARY_BREED,",
+				"          BREED_KEY = GENERATED_KEY",
+				"     )) ~> sinkDimBreed"
 			]
 		}
 	}
