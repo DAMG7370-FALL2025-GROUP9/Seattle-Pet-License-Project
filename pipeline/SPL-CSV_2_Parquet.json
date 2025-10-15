@@ -143,12 +143,20 @@
 						"parameters": {
 							"container_name": "stagedata",
 							"folder_name": "stagedata",
-							"file_name": "SPL.parquet"
+							"file_name": {
+								"value": "@concat(pipeline().parameters.table_name, '.parquet')",
+								"type": "Expression"
+							}
 						}
 					}
 				]
 			}
 		],
+		"parameters": {
+			"table_name": {
+				"type": "string"
+			}
+		},
 		"annotations": []
 	}
 }
