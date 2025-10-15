@@ -56,12 +56,18 @@
 				},
 				{
 					"name": "joinBreed"
+				},
+				{
+					"name": "lkpSpecies"
+				},
+				{
+					"name": "FactKeyGen"
+				},
+				{
+					"name": "SelectColumns"
 				}
 			],
 			"scriptLines": [
-				"parameters{",
-				"     parameter1 as string",
-				"}",
 				"source(output(",
 				"          LICENSE_ISSUE_DATE as string,",
 				"          LICENSE_NUMBER as string,",
@@ -109,7 +115,11 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourceBreed",
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          SPECIES_KEY as decimal(38,0),",
+				"          SPECIES_NAME as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourceSpecies",
 				"sourceSPL derive(full_date = toDate(toTimestamp(trim(LICENSE_ISSUE_DATE), 'MMMM d, yyyy')),",
@@ -126,11 +136,30 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> JoinLoc",
-				"JoinLoc join(ERROR_FUNCTION('') == ERROR_FUNCTION(''),",
+				"lkpSpecies, sourceBreed join(sourceSpecies@SPECIES_KEY == sourceBreed@SPECIES_KEY",
+				"     && PRIMARY_BREED == PRIMARY_BREED_NAME",
+				"     && SECONDARY_BREED == SECONDARY_BREED_NAME,",
 				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
-				"     broadcast: 'auto')~> joinBreed"
+				"     broadcast: 'auto')~> joinBreed",
+				"JoinLoc, sourceSpecies lookup(species_clean == SPECIES_NAME,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lkpSpecies",
+				"SelectColumns keyGenerate(output({GENERATED KEY} as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> FactKeyGen",
+				"joinBreed select(mapColumn(",
+				"          LICENSE_NUMBER,",
+				"          PET_NAME = ANIMAL_NAME,",
+				"          license_count,",
+				"          DATE_KEY = sourceDate@DATE_KEY,",
+				"          LOCATION_KEY,",
+				"          BREED_KEY",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectColumns"
 			]
 		}
 	}
