@@ -1,5 +1,5 @@
 {
-	"name": "CSV_2_Parquet",
+	"name": "SPL-CSV_2_Parquet",
 	"properties": {
 		"activities": [
 			{
