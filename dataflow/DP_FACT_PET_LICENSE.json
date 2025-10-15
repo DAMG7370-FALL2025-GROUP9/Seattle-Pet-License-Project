@@ -30,7 +30,23 @@
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "CleanPrep"
+				},
+				{
+					"name": "LkpDate"
+				},
+				{
+					"name": "DateKeyClean"
+				},
+				{
+					"name": "JoinLoc"
+				},
+				{
+					"name": "joinBreed"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          LICENSE_ISSUE_DATE as string,",
@@ -71,7 +87,26 @@
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourceDate",
 				"source(allowSchemaDrift: true,",
-				"     validateSchema: false) ~> sourceBreed"
+				"     validateSchema: false) ~> sourceBreed",
+				"sourceSPL derive(full_date = toDate(toTimestamp(trim(LICENSE_ISSUE_DATE), 'MMMM d, yyyy')),",
+				"          species_clean = upper(trim(SPECIES)),",
+				"          breed_clean = iif(!isNull(PRIMARY_BREED) && trim(PRIMARY_BREED)!='', upper(trim(PRIMARY_BREED)), upper(trim(SECONDARY_BREED))),",
+				"          license_count = 1) ~> CleanPrep",
+				"DateKeyClean, sourceDate lookup(DateKeyClean@date_key == sourceDate@DATE_KEY,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LkpDate",
+				"CleanPrep derive(date_key = (year(full_date) * 10000) + (month(full_date) * 100) + dayOfMonth(full_date)) ~> DateKeyClean",
+				"LkpDate, sourceLocation join(sourceSPL@ZIP_CODE == sourceLocation@ZIP_CODE,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinLoc",
+				"JoinLoc join(ERROR_FUNCTION('') == ERROR_FUNCTION(''),",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinBreed"
 			]
 		}
 	}
