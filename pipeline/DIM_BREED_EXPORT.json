@@ -19,11 +19,7 @@
 						"referenceName": "DF_DIM_BREED",
 						"type": "DataFlowReference",
 						"datasetParameters": {
-							"sourcePrimary": {
-								"schema_name": "STAGE",
-								"table_name": "PET_LICENSE"
-							},
-							"sourceSecondary": {
+							"sourceSPL": {
 								"schema_name": "STAGE",
 								"table_name": "PET_LICENSE"
 							},
