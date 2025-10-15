@@ -12,6 +12,9 @@
 					"name": "sourcePrimary"
 				},
 				{
+					"name": "sourceSecondary"
+				},
+				{
 					"dataset": {
 						"referenceName": "Snow_Stage_DS",
 						"type": "DatasetReference"
@@ -19,11 +22,7 @@
 					"name": "sourceSpecies"
 				}
 			],
-			"sinks": [
-				{
-					"name": "sink1"
-				}
-			],
+			"sinks": [],
 			"transformations": [
 				{
 					"name": "CleanP"
@@ -32,13 +31,10 @@
 					"name": "LkpSpecies"
 				},
 				{
-					"name": "DistinctBreedBySpecies"
-				},
-				{
-					"name": "RowChanges"
-				},
-				{
 					"name": "CleanFilter"
+				},
+				{
+					"name": "ShapePrimary"
 				}
 			],
 			"scriptLines": [
@@ -54,6 +50,8 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourcePrimary",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false) ~> sourceSecondary",
 				"source(output(",
 				"          SPECIES_KEY as decimal(38,0),",
 				"          SPECIES_NAME as string",
@@ -62,18 +60,14 @@
 				"     validateSchema: false,",
 				"     format: 'table') ~> sourceSpecies",
 				"sourcePrimary derive(species_clean = upper(trim(SPECIES)),",
-				"          breed_clean = upper(trim(PRIMARY_BREED))) ~> CleanP",
+				"          primary_breed_clean = upper(trim(PRIMARY_BREED))) ~> CleanP",
 				"CleanFilter, sourceSpecies lookup(species_clean == SPECIES_NAME,",
 				"     multiple: false,",
 				"     pickup: 'any',",
 				"     broadcast: 'auto')~> LkpSpecies",
-				"LkpSpecies aggregate(groupBy(SPECIES_KEY = Species)) ~> DistinctBreedBySpecies",
-				"DistinctBreedBySpecies alterRow() ~> RowChanges",
-				"CleanP filter(!isNull(breed_clean) && trim(breed_clean) != '') ~> CleanFilter",
-				"RowChanges sink(allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sink1"
+				"CleanP filter(!isNull(primary_breed_clean) && trim(primary_breed_clean) != '') ~> CleanFilter",
+				"LkpSpecies derive(PRIMARY_BREED = toString(substring(primary_breed_clean,0,100)),",
+				"          SECONDARY_BREED = toString(null())) ~> ShapePrimary"
 			]
 		}
 	}
