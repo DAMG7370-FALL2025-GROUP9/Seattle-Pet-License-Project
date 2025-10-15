@@ -32,7 +32,13 @@
 							"type": "SnowflakeImportCopyCommand"
 						}
 					},
-					"enableStaging": false,
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "ls_storage_azure_bloc",
+							"type": "LinkedServiceReference"
+						}
+					},
 					"translator": {
 						"type": "TabularTranslator",
 						"mappings": [
@@ -116,7 +122,10 @@
 						"parameters": {
 							"container_name": "stagedata",
 							"folder_name": "stagedata",
-							"file_name": "SPL.parquet"
+							"file_name": {
+								"value": "@concat(pipeline().parameters.table_name)",
+								"type": "Expression"
+							}
 						}
 					}
 				],
@@ -125,12 +134,9 @@
 						"referenceName": "Snow_Stage_DS",
 						"type": "DatasetReference",
 						"parameters": {
-							"schema_name": {
-								"value": "@pipeline().parameters.schema_name",
-								"type": "Expression"
-							},
+							"schema_name": "STAGE",
 							"table_name": {
-								"value": "@concat(pipeline().parameters.table_name, '.parquet')",
+								"value": "@toUpper(pipeline().parameters.table_name)",
 								"type": "Expression"
 							}
 						}
