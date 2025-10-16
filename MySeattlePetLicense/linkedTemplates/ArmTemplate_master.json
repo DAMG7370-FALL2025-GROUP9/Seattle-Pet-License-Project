@@ -11,21 +11,13 @@
 			"type": "string",
 			"defaultValue": "https://SeattlePet.vault.azure.net/"
 		},
-		"AzureSqlDatabase1_properties_typeProperties_server": {
-			"type": "string",
-			"defaultValue": "fall2025damg.database.windows.net"
-		},
-		"AzureSqlDatabase1_properties_typeProperties_database": {
-			"type": "string",
-			"defaultValue": "master"
-		},
-		"AzureSqlDatabase1_properties_typeProperties_userName": {
-			"type": "string",
-			"defaultValue": "fall2025admin"
-		},
 		"ls_storage_azure_bloc_properties_typeProperties_serviceEndpoint": {
 			"type": "string",
 			"defaultValue": "https://seattlepet.blob.core.windows.net/"
+		},
+		"ls_storage_sas_auth_sasUri": {
+			"type": "secureString",
+			"metadata": "Secure string for 'sasUri' of 'ls_storage_sas_auth'"
 		},
 		"snowSPL_properties_typeProperties_database": {
 			"type": "string",
@@ -38,10 +30,6 @@
 		"snowSPL_properties_typeProperties_host": {
 			"type": "string",
 			"defaultValue": "VKWSSIM-FBA73607.snowflakecomputing.com"
-		},
-		"ls_storage_sas_auth_sasUri": {
-			"type": "secureString",
-			"metadata": "Secure string for 'sasUri' of 'ls_storage_sas_auth'"
 		},
 		"containerUri": {
 			"type": "string",
@@ -79,15 +67,6 @@
 					"ls_storage_sas_auth_sasUri": {
 						"value": "[parameters('ls_storage_sas_auth_sasUri')]"
 					},
-					"AzureSqlDatabase1_properties_typeProperties_server": {
-						"value": "[parameters('AzureSqlDatabase1_properties_typeProperties_server')]"
-					},
-					"AzureSqlDatabase1_properties_typeProperties_database": {
-						"value": "[parameters('AzureSqlDatabase1_properties_typeProperties_database')]"
-					},
-					"AzureSqlDatabase1_properties_typeProperties_userName": {
-						"value": "[parameters('AzureSqlDatabase1_properties_typeProperties_userName')]"
-					},
 					"snowSPL_properties_typeProperties_database": {
 						"value": "[parameters('snowSPL_properties_typeProperties_database')]"
 					},
@@ -100,6 +79,26 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "MySeattlePetLicense_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'MySeattlePetLicense_ArmTemplate_0')]"
+			]
 		}
 	]
 }

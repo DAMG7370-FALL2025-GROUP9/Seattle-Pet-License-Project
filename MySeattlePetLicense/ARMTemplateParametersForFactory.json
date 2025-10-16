@@ -8,17 +8,11 @@
 		"AzureKeyVault1_properties_typeProperties_baseUrl": {
 			"value": "https://SeattlePet.vault.azure.net/"
 		},
-		"AzureSqlDatabase1_properties_typeProperties_server": {
-			"value": "fall2025damg.database.windows.net"
-		},
-		"AzureSqlDatabase1_properties_typeProperties_database": {
-			"value": "master"
-		},
-		"AzureSqlDatabase1_properties_typeProperties_userName": {
-			"value": "fall2025admin"
-		},
 		"ls_storage_azure_bloc_properties_typeProperties_serviceEndpoint": {
 			"value": "https://seattlepet.blob.core.windows.net/"
+		},
+		"ls_storage_sas_auth_sasUri": {
+			"value": ""
 		},
 		"snowSPL_properties_typeProperties_database": {
 			"value": "PET_DB"
@@ -28,9 +22,6 @@
 		},
 		"snowSPL_properties_typeProperties_host": {
 			"value": "VKWSSIM-FBA73607.snowflakecomputing.com"
-		},
-		"ls_storage_sas_auth_sasUri": {
-			"value": ""
 		}
 	}
 }
