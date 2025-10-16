@@ -137,7 +137,7 @@
 				"lkpSpecies, sourceBreed join(sourceSpecies@SPECIES_KEY == sourceBreed@SPECIES_KEY",
 				"     && PRIMARY_BREED == PRIMARY_BREED_NAME",
 				"     && SECONDARY_BREED == SECONDARY_BREED_NAME,",
-				"     joinType:'left',",
+				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> joinBreed",
@@ -155,8 +155,8 @@
 				"          LOCATION_KEY,",
 				"          BREED_KEY",
 				"     ),",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> SelectColumns",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> SelectColumns",
 				"DateKeyClean, sourceDate lookup(DateKeyClean@date_key == sourceDate@DATE_KEY,",
 				"     multiple: false,",
 				"     pickup: 'any',",
@@ -181,8 +181,7 @@
 				"          PET_NAME,",
 				"          DATE_KEY,",
 				"          LOCATION_KEY,",
-				"          BREED_KEY,",
-				"          FACT_KEY = {GENERATED KEY}",
+				"          BREED_KEY",
 				"     )) ~> sinkFact"
 			]
 		}
