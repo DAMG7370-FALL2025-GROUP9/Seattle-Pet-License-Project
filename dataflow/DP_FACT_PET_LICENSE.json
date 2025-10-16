@@ -137,7 +137,7 @@
 				"lkpSpecies, sourceBreed join(sourceSpecies@SPECIES_KEY == sourceBreed@SPECIES_KEY",
 				"     && PRIMARY_BREED == PRIMARY_BREED_NAME",
 				"     && SECONDARY_BREED == SECONDARY_BREED_NAME,",
-				"     joinType:'inner',",
+				"     joinType:'left',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> joinBreed",
@@ -181,7 +181,8 @@
 				"          PET_NAME,",
 				"          DATE_KEY,",
 				"          LOCATION_KEY,",
-				"          BREED_KEY",
+				"          BREED_KEY,",
+				"          FACT_KEY = {GENERATED KEY}",
 				"     )) ~> sinkFact"
 			]
 		}
